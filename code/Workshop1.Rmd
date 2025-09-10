@@ -1,8 +1,8 @@
 ---
 title: "MB5370 Module 04. Workshop 1 - Introduction"
-author: "Ben Cresswell"
+author: "Ben Cresswell edited by Charlotte Hyndman"
 output: html_document
-date: "2024-03-22"
+date: "2025-09-10"
 ---
 
 ```{r setup, include=FALSE}
@@ -34,7 +34,7 @@ summary(mpg)
 # Create first plot
 ```{r}
 ggplot(data = mpg) + 
-  geom_point(mapping = aes(x = disp, y = hwy))
+  geom_point(mapping = aes(x = displ, y = hwy))
 ```
 
 The plot shows a negative relationship between engine size (displ) and fuel efficiency (hwy). In other words, cars with big engines use more fuel. What does this say about fuel efficiency and engine size?
@@ -93,6 +93,19 @@ ggplot(data = mpg) +
   geom_point(mapping = aes(x = displ, y = hwy), color = "blue")
 ```
 
+```{r}
+ggplot(data = mpg) + 
+  geom_point(aes(x = displ, y = hwy, colour = displ < 5))
+```
+```{r}
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy, alpha = 0.5))
+```
+
+```{r}
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy, alpha = 3))
+```
 
 # Troubleshooting 
 
@@ -126,7 +139,7 @@ Note that there are no occurrences of 5 cylinder 4WDs OR RWD vehicles!
 ```{r}
 ggplot(data = mpg) + 
   geom_point(mapping = aes(x = displ, y = hwy)) + 
-  facet_grid(cyl ~ .)
+  facet_grid(. ~ cyl)
   #facet_grid(. ~ cyl) # Alternatively
 
 ```
@@ -135,7 +148,7 @@ ggplot(data = mpg) +
 Read ?facet_wrap. What does nrow do? What does ncol do? What other options control the layout of the individual panels? 
 
 ```{r}
-
+?facet_wrap
 ```
 
 
@@ -143,7 +156,7 @@ Read ?facet_wrap. What does nrow do? What does ncol do? What other options contr
 We already used points:
 ```{r}
 ggplot(data = mpg) + 
-  geom_point(mapping = aes(x = displx, y = hwy))
+  geom_point(mapping = aes(x = displ, y = hwy))
 ```
 
 
@@ -163,10 +176,13 @@ So let’s recap. A geom is an object that your plot uses to represent the data.
 ```{r}
 ggplot(data = mpg) + 
   #geom_point(mapping = aes(x = displ, y = hwy)) + # points horrible 
-  geom_smooth(mappings = aes(x = displ, y = hwy)) # try smooth line
+  geom_smooth(mapping = aes(x = displ, y = hwy)) # try smooth line
 ```
 
 Question: how does R work out where to plot the line??? Can use the chunk output to inform us. Can also use the help menu.
+```{r}
+?geom_smooth
+```
 
 # Changing linetype
 ```{r}
@@ -194,7 +210,7 @@ ggplot(data = mpg) +
 We already did this one way
 ```{r}
 ggplot(data = mpg) + 
-  geom_point(mapping = aes(xx = displ, y = hwy)) +
+  geom_point(mapping = aes(x = displ, y = hwy)) +
   geom_smooth(mapping = aes(x = displ, y = hwy))
 ```
 
@@ -222,14 +238,32 @@ ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) +
   geom_smooth(data = filter(mpg, class == "subcompact"), se = FALSE)
 ```
 Question: what does the "se = FALSE" do?
+```{r}
+?geom_smooth
+#does not display confidence interval
+```
 
 
 # Exercise:
 1.  What geom would you use to draw a line chart? A boxplot? A histogram? An area chart?
+geom_line()
+geom_boxplot()
+geom_histogram()
+geom_area()
 2.  Run this code in your head and predict what the output will look like. Then, run the code in R and check your predictions.
 
 ```{r}
+ggplot(data = mpg) + 
+  geom_line(mapping = aes(x = displ, y = hwy))
 
+ggplot(data = mpg) + 
+  geom_boxplot(mapping = aes(x = displ, y = hwy))
+
+ggplot(data = mpg) + 
+  geom_histogram(mapping = aes(y = hwy))
+
+ggplot(data = mpg) + 
+  geom_area(mapping = aes(x = displ, y = hwy))
 ```
 
 
@@ -242,8 +276,15 @@ ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) +
 ggplot() + 
   geom_point(data = mpg, mapping = aes(x = displ, y = hwy)) + 
   geom_smooth(data = mpg, mapping = aes(x = displ, y = hwy))
+
+# they will look the same because it is the same code
 ```
 
+```{r}
+ggplot() + 
+  geom_point(data = mpg, mapping = aes(x = displ, y = hwy, colour = drv)) + 
+  geom_smooth(data = mpg, mapping = aes(x = displ, y = hwy, linetype = drv, colour = drv))
+```
 
 # Transformations and stats
 
@@ -251,6 +292,7 @@ ggplot() +
 ```{r}
 data("diamonds")
 glimpse(diamonds)
+?diamonds
 ```
 
 # Bar plot
@@ -280,6 +322,8 @@ ggplot(data = demo) +
 ```
 Question: Why did we specify now specify a y axis?
 
+Specified the y axis because we are not using the default stat. 
+
 # What if we want to know the proportion rather than the absolute frequency?
 ```{r}
 ggplot(data = diamonds) + 
@@ -289,6 +333,7 @@ ggplot(data = diamonds) +
 Question: does anyone get the warning that's in the workbook?
 Warning: `stat(prop)` was deprecated in ggplot2 3.4.0.
 If so, can use # geom_bar(mapping = aes(x = cut, y = stage(after_stat = prop), group = 1))
+
 
 # Plotting statistical details
 ```{r}
@@ -369,6 +414,16 @@ ggplot(data = mpg) +
 ```
 
 
+Template for GGPLOT2
+```{r}
+ggplot(data = <DATA>) + 
+  <GEOM_FUNCTION>(
+     mapping = aes(<MAPPINGS>),
+     stat = <STAT>, 
+     position = <POSITION>
+  ) +
+  <FACET_FUNCTION>
+```
 
 
 

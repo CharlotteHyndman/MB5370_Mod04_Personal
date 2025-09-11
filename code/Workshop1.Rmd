@@ -415,7 +415,6 @@ ggplot(data = mpg) +
 
 
 Template for GGPLOT2
-```{r}
 ggplot(data = <DATA>) + 
   <GEOM_FUNCTION>(
      mapping = aes(<MAPPINGS>),
@@ -423,13 +422,3 @@ ggplot(data = <DATA>) +
      position = <POSITION>
   ) +
   <FACET_FUNCTION>
-```
-
-
-
-
-
-
-
-
-

@@ -1,1 +1,357 @@
+# Tidying data
+
+```{r}
+table1
+#> # A tibble: 6 × 4
+#>   country      year  cases population
+#>   <chr>       <int>  <int>      <int>
+#> 1 Afghanistan  1999    745   19987071
+#> 2 Afghanistan  2000   2666   20595360
+#> 3 Brazil       1999  37737  172006362
+#> 4 Brazil       2000  80488  174504898
+#> 5 China        1999 212258 1272915272
+#> 6 China        2000 213766 1280428583
+table2
+#> # A tibble: 12 × 4
+#>   country      year type           count
+#>   <chr>       <int> <chr>          <int>
+#> 1 Afghanistan  1999 cases            745
+#> 2 Afghanistan  1999 population  19987071
+#> 3 Afghanistan  2000 cases           2666
+#> 4 Afghanistan  2000 population  20595360
+#> 5 Brazil       1999 cases          37737
+#> 6 Brazil       1999 population 172006362
+#> # ... with 6 more rows
+table3
+#> # A tibble: 6 × 3
+#>   country      year rate             
+#> * <chr>       <int> <chr>            
+#> 1 Afghanistan  1999 745/19987071     
+#> 2 Afghanistan  2000 2666/20595360    
+#> 3 Brazil       1999 37737/172006362  
+#> 4 Brazil       2000 80488/174504898  
+#> 5 China        1999 212258/1272915272
+#> 6 China        2000 213766/1280428583
+```
+```{r}
+# Compute rate per 10,000
+table1 %>% 
+  mutate(rate = cases / population * 10000)
+#> # A tibble: 6 × 5
+#>   country      year  cases population  rate
+#>   <chr>       <int>  <int>      <int> <dbl>
+#> 1 Afghanistan  1999    745   19987071 0.373
+#> 2 Afghanistan  2000   2666   20595360 1.29 
+#> 3 Brazil       1999  37737  172006362 2.19 
+#> 4 Brazil       2000  80488  174504898 5.61 
+#> 5 China        1999 212258 1272915272 1.67 
+#> 6 China        2000 213766 1280428583 1.67
+
+# Compute cases per year
+table1 %>% 
+  count(year, wt = cases)
+#> # A tibble: 2 × 2
+#>    year      n
+#>   <int>  <int>
+#> 1  1999 250740
+#> 2  2000 296920
+
+# Visualise changes over time
+library(ggplot2)
+ggplot(table1, aes(year, cases)) + 
+  geom_line(aes(group = country), colour = "grey50") + 
+  geom_point(aes(colour = country))
+
+```
+
+
+# Exercise
+1. For each of the sample tables, describe what each observation and each column represents.
+
+Table 1:columns: country: The country name
+
+year: The year of observation
+
+cases: The number of cases of the disease in that country and year
+
+population: The population of that country in that year
+
+observations:A single country in a single year.
+
+Table 2: columns: country: The country name
+
+year: The year of observation
+
+type: What kind of value is being recorded (cases or population)
+
+count: The actual numeric value for that type
+
+observations: A single country in a single year for a single type of measurement.
+
+Table 3: columns: country: The country name
+
+year: The year of observation
+
+rate: A string containing both cases and population combined into one expression
+
+observations: A single country in a single year
+
+2. Sketch out the processes you would use to calculate the rate for table2 and table3. You  will need to perform four operations:
+ Extract the number of TB cases per country per year
+ Extract the matching population per country per year
+ Divide cases by population, and multiply by 10,000
+ Store back in the appropriate place
+
+# Pivoting data to make it tidy
+```{r}
+billboard
+#> # A tibble: 317 × 79
+#>   artist       track               date.entered   wk1   wk2   wk3   wk4   wk5
+#>   <chr>        <chr>               <date>       <dbl> <dbl> <dbl> <dbl> <dbl>
+#> 1 2 Pac        Baby Don't Cry (Ke... 2000-02-26      87    82    72    77    87
+#> 2 2Ge+her      The Hardest Part O... 2000-09-02      91    87    92    NA    NA
+#> 3 3 Doors Down Kryptonite          2000-04-08      81    70    68    67    66
+#> 4 3 Doors Down Loser               2000-10-21      76    76    72    69    67
+#> 5 504 Boyz     Wobble Wobble       2000-04-15      57    34    25    17    17
+#> 6 98^0         Give Me Just One N... 2000-08-19      51    39    34    26    26
+#> # ℹ 311 more rows
+#> # ℹ 71 more variables: wk6 <dbl>, wk7 <dbl>, wk8 <dbl>, wk9 <dbl>, ...
+```
+```{r}
+# This is the case where actual data values (wk1, wk2 etc.)  are in the column name, with each observation (row of data) being a song. We need to have the data in a format where each row is an observation (so-called long format).
+billboard |> 
+  pivot_longer(
+    cols = starts_with("wk"), 
+    names_to = "week", 
+    values_to = "rank"
+  )
+```
+
+```{r}
+# remove NA
+billboard |> 
+  pivot_longer(
+    cols = starts_with("wk"), 
+    names_to = "week", 
+    values_to = "rank",
+    values_drop_na = TRUE
+  )
+```
+
+
+```{r}
+# example: Here, all we have done is created a dataset called ‘df’ with 3 variables and their associated values.
+df <- tribble(
+  ~id,  ~bp1, ~bp2,
+   "A",  100,  120,
+   "B",  140,  115,
+   "C",  120,  125
+)
+```
+
+```{r}
+# we want our new (tidy) dataset to have three variables: id (which already exists), measurement (the column names), value (the cell values)
+df |> 
+  pivot_longer(
+    cols = bp1:bp2,
+    names_to = "measurement",
+    values_to = "value"
+  )
+
+
+```
+In less common cases, we may need to widen a dataset rather than lengthen it. Widening is essentially the opposite of lengthening and we do so by using the function pivot_wider(). pivot_wider() allows us to handle an observation if it is scattered across multiple rows. 
+```{r}
+cms_patient_experience
+```
+
+```{r}
+# The core unit being studied is an organization. But in this format, each organization is spread across six rows with one row for each measurement taken in the survey organization. We can see the complete set of values for measure_cd and measure_title by using distinct()
+
+cms_patient_experience |> 
+  distinct(measure_cd, measure_title)
+```
+
+```{r}
+# pivot_wider() has the opposite interface to pivot_longer(): instead of choosing new column names, we need to provide the existing columns that define the values (values_from) and the column name (names_from):
+cms_patient_experience |> 
+  pivot_wider(
+    names_from = measure_cd,
+    values_from = prf_rate
+  )
+```
+```{r}
+# The above output doesn’t look quite right; we still seem to have multiple rows for each organization. That’s because, we also need to tell pivot_wider() which column or columns have values that uniquely identify each row; in this case those are the variables starting with "org"
+cms_patient_experience |> 
+  pivot_wider(
+    id_cols = starts_with("org"),
+    names_from = measure_cd,
+    values_from = prf_rate
+  )
+```
+```{r}
+# To understand what pivot_wider() does to our data, let’s once again use a simple example. This time we have two patients with ids A and B, and we have three blood pressure (bp) measurements from patient A and two from patient B
+
+df <- tribble(
+  ~id, ~measurement, ~value,
+  "A",        "bp1",    100,
+  "B",        "bp1",    140,
+  "B",        "bp2",    115, 
+  "A",        "bp2",    120,
+  "A",        "bp3",    105
+)
+
+```
+
+```{r}
+# We’ll take the names from the measurement column using the names_from() argument and the values from the value column using the values_from() argument
+df |> 
+  pivot_wider(
+    names_from = measurement,
+    values_from = value
+  )
+```
+
+# Exercise 
+```{r}
+# Why are pivot_longer() and pivot_wider() not perfectly symmetrical? Carefully consider the following example. 
+stocks <- tibble(
+  year   = c(2015, 2015, 2016, 2016),
+  half  = c(   1,    2,     1,    2),
+  return = c(1.88, 0.59, 0.92, 0.17)
+)
+stocks 
+
+stocks %>% 
+  pivot_wider(names_from = year, values_from = return) %>% 
+  pivot_longer(`2015`:`2016`, names_to = "year", values_to = "return")
+
+```
+When you use pivot_wider(), the values you spread into column names (e.g. years like 2015, 2016) are stored as character strings, because column names in R are always text. When you later use pivot_longer(), those names are pulled back into a column, so by default the new variable (e.g. year) will also be character, not the original numeric type.
+The names_ptypes argument in pivot_longer() lets you explicitly set the type of the new column created from column names. For example, names_ptypes = list(year = double()) will coerce the year column back into numeric form.
+
+```{r}
+# why does this code fail?
+table4a 
+
+table4a %>% 
+  pivot_longer(c(1999, 2000), names_to = "year", values_to = "cases")
+```
+The code fails because pivot_longer(c(1999, 2000), …) is interpreted as selecting the 1999th and 2000th columns by position, not the columns named "1999" and "2000". Since the tibble only has three columns, those positions don’t exist, and the function errors out
+```{r}
+# Consider the sample tibble below. Do you need to make it wider or longer? What are the variables?
+preg <- tribble(
+  ~pregnant, ~male, ~female,
+  "yes",     NA,    10,
+  "no",      20,    12
+)
+
+preg
+
+# need to make it longer. The variables are male, feamle and whether or not they are pregnant. We can make male/female into sex and then have the value as a column. 
+
+preg %>%
+  pivot_longer(male:female, names_to = "sex", values_to = "count")
+```
+# Separating and uniting data tables
+In table3, we see one column (rate) that contains two variables (cases and population). To address this, we can use the separate() function which separates one column into multiple columns wherever you designate.
+
+```{r}
+table3
+
+table3 %>% 
+  separate(rate, into = c("cases", "population"))
+
+# By default, separate() will split values wherever it sees a non-alphanumeric character (i.e. a character that isn’t a number or letter). For example, in the code above, separate() split the values of rate at the forward slash characters. If you wish to use a specific character to separate a column, you can pass the character to the sep argument of separate(). For example, we could rewrite the code above as
+
+table3 %>% 
+  separate(rate, into = c("cases", "population"), sep = "/")
+
+
+```
+```{r}
+# Notice the data types in table3 above. Both cases and population are listed as character (<chr>) types. This is a default of using separate(). However, since the values in those columns are actually numbers, we want to ask separate() to convert them to better types using convert = TRUE. Now you can see they are listed as integer types(<int>)
+table3 %>% 
+  separate(rate, into = c("cases", "population"), convert = TRUE)
+```
+```{r}
+# You can also pass a vector of integers to sep. separate() will interpret the integers as positions to split at. Positive values start at 1 on the far-left of the strings; negative values start at -1 on the far-right of the strings. When using integers to separate strings, the length of sep should be one less than the number of names in into. You can use this arrangement to separate the last two digits of each year. This makes this data less tidy, but is useful in other cases, as you’ll see in a little bit.
+
+table3 %>% 
+  separate(year, into = c("century", "year"), sep = 2)
+
+```
+```{r}
+# To perform the inverse of separate() we will use unite() to combine multiple columns into a single column. In the example below for table5, we use unite() to rejoin century and year columns. unite() takes a data frame, the name of the new variable and a set of columns to combine using dplyr::select().
+
+table5 %>% 
+  unite(new, century, year, sep = "")
+
+# Here we need to add sep ="" because we don’t want any separator (the default is to add an underscore _)
+```
+
+# Missing values
+```{r}
+treatment <- tribble(
+  ~person,           ~treatment, ~response,
+  "Derrick Whitmore", 1,         7,
+  NA,                 2,         10,
+  NA,                 3,         NA,
+  "Katherine Burke",  1,         4
+)
+```
+
+```{r}
+# You can fill in these missing values with tidyr::fill(). It works like select(), taking a set of columns:
+treatment |>
+  fill(everything())
+
+# This treatment is sometimes called “last observation carried forward”, or locf for short. You can use the .direction argument to fill in missing values that have been generated in more exotic ways.
+```
+```{r}
+# Sometimes missing values represent some fixed and known value, most commonly 0. You can use dplyr::coalesce() to replace them
+x <- c(1, 4, 5, 7, NA)
+coalesce(x, 0)
+```
+
+```{r}
+# And sometimes you’ll encounter the opposite problem where some other concrete value actually represents a missing value. This typically happens when data is generated from an older software that can’t properly represent missing values so it uses something like 99 or -999 in place of the missing value. You can fix this with dplyr::na_if()
+x <- c(1, 4, 5, 7, -99)
+na_if(x, -99)
+```
+```{r}
+# One special type of missing value worth mentioning is NaN or Not a Number. It typically behaves the same as NA but in some rare cases you may need to distinguish it using is.nan(x)
+x <- c(NA, NaN)
+x * 10
+x == 1
+is.na(x)
+```
+# Practical advice
+```{r}
+students <- read_csv("https://pos.it/r4ds-students-csv")
+students
+```
+```{r}
+# You might also notice that the Student ID and Full Name columns are surrounded by backticks. That’s because they contain spaces, breaking R’s usual rules for variable names; they’re non-syntactic names (think back to our intro to programming workshop!). To refer to these variables, you need to surround them with backticks, `:
+students_NA |> 
+  rename(
+    student_id = `Student ID`,
+    full_name = `Full Name`
+  )
+
+```
+
+# Pipes
+
+Let’s explore pipes using code to tell a kids story about a little bunny named Foo Foo:
+Little bunny Foo Foo
+	Went hopping through the forest
+	Scooping up the field mice
+	And bopping them on the head
+
+```{r}
+
+```
+
+
 

@@ -1,1 +1,107 @@
 
+```{r}
+library(tidyverse)
+library(sf) # simple features
+library (terra) # for raster
+library(tmap) # Thematic maps are geographical maps in which spatial data distributions are visualized
+
+```
+
+```{r}
+library(readr)
+dat <- read_csv("C:/Users/charl/OneDrive/Desktop/MB5370/Module_2/data-for-course/copepods_raw.csv")
+dat
+```
+
+
+```{r}
+# plot the coordinates for the samples (segments of the CPR silks)
+
+library(ggplot2)
+ggplot(dat) + 
+  aes(x = longitude, y = latitude, color = richness_raw) +
+  geom_point()
+```
+
+```{r}
+# now let’s look at the richness data (our main variable for analysis). This time we are going to visualize richness in a non-spatial way with latitude on the x-axis and richness on the y-axis.
+
+ggplot(dat, aes(x = latitude, y = richness_raw)) + 
+  stat_smooth() + 
+  geom_point()
+```
+
+```{r}
+# st_as_sf converts different data types to simple features. 
+# dat is our original data. 
+# coords gives the names of the columns that relate to the spatial coordinates (in order of X coordinate followed by Y coordinate).
+# crs stands for coordinate reference system which we will discuss next.
+
+sdat <- st_as_sf(dat, coords = c("longitude", "latitude"), 
+                 crs = 4326)
+```
+
+```{r}
+crs4326 <- st_crs(4326)
+crs4326 # look at the whole CRS
+crs4326$Name # pull out just the name of the crs
+```
+```{r}
+crs4326$wkt # crs in well-known text format
+```
+```{r}
+sdat
+```
+
+```{r}
+# sf has simple plotting features, like this
+
+plot(sdat["richness_raw"])
+
+# Here we have only plotted the richness column
+```
+
+```{r}
+# if we used plot(sdat) it would create a panel for every variable in our dataframe.
+
+plot(sdat)
+```
+
+```{r}
+#using tmap
+
+tm_shape(sdat) + 
+  tm_dots(col = "richness_raw")
+
+# tm_dots to plot dots of the coordinates. Other options are tm_polygons, tm_symbols and many others we’ll see later.
+# We’ve chosen "richness_raw" as the color scale
+```
+```{r}
+aus <- st_read("C:/Users/charl/OneDrive/Desktop/MB5370/Module_2/data-for-course/spatial-data/Aussie/Aussie.shp")
+```
+```{r}
+shelf <- st_read("C:/Users/charl/OneDrive/Desktop/MB5370/Module_2/data-for-course/spatial-data/aus_shelf/aus_shelf.shp")
+```
+```{r}
+# As always check out the data by typing the object names and reviewing the output in the console. Note here that the CRS is provided in the shapefile, it’s already spatially aware.
+
+aus
+```
+```{r}
+# tmap makes it very straightforward to make a map of polygons
+tm_shape(shelf) + 
+  tm_polygons()
+```
+```{r}
+# Here we have indicated the shape of our map (shelf) and we have added a command bbox = sdat to expand the extent of the map so it depicts all of our copepod data points. We then add the shape of Australia (aus) on top of the shelf, and finally our copepod data (sdat) in the form of points using tm_dots().
+
+tm_shape(shelf, bbox = sdat) + 
+  tm_polygons() +
+  tm_shape(aus) + 
+  tm_polygons() + 
+  tm_shape(sdat) + 
+  tm_dots()
+```
+
+
+

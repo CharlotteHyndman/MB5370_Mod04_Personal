@@ -1,0 +1,70 @@
+
+
+```{r}
+# load raw CSV file into R
+harvest_fishery <- read.csv("harvest_fishery.csv")
+
+# view raw data to understand information we are dealing with
+head(harvest_fishery)
+```
+
+
+```{r}
+# load raw data and treat first row as data
+raw <- read.csv("harvest_fishery.csv", header = FALSE, stringsAsFactors = FALSE)
+
+# remove first 3 rows and rename columns
+tidy <- raw[-c(1:3), ]
+colnames(tidy) <- c("Year", "Licences", "Days", "Species", "Tonnes")
+
+# fill Species column with "freshwater eel"
+tidy$Species <- "freshwater eel"
+
+# remove rows with invalid entries
+tidy <- tidy %>%
+  filter(
+    !Year %in% c("Grand Total", "CalendarYear", "N/A"),
+    !Licences %in% c("N/A"),
+    !Days %in% c("N/A"),
+    !Tonnes %in% c("N/A")
+  )
+
+# view cleaned data
+head(tidy)
+
+```
+
+```{r}
+# investigating cleaned data
+summary(tidy)
+
+# converting character columns to numeric values
+tidy <- tidy %>%
+  mutate(
+    Year = as.numeric(Year),
+    Licences = as.numeric(Licences),
+    Days = as.numeric(Days),
+    Tonnes = as.numeric(Tonnes)
+  )
+```
+
+
+```{r}
+# creating time series plot
+ggplot(tidy, aes(x = Year, y = Tonnes)) + 
+  geom_line(color = "black", size = 1) + 
+  labs(
+    x = "Year", 
+    y = "Catch (Tonnes)",
+    caption = "Total freshwater eel catch (tonnes) from commercial harvest fisheries in Queensland from 1996 to 2018"
+  ) +
+  scale_x_continuous(breaks = seq(min(tidy$Year, na.rm = TRUE), 
+                                  max(tidy$Year, na.rm = TRUE), 
+                                  by = 2)) +
+  theme_minimal() +
+  theme(
+    plot.caption = element_text(hjust = 0.5, face = "italic", size = 10)  # centered figure caption
+  )
+
+```
+
